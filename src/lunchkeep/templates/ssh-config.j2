@@ -1,0 +1,28 @@
+{% for host in data.bastions %}
+Host bastion-host
+HostName {{ host.public_ip }}
+User ubuntu
+Port 22
+IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentitiesOnly yes
+{% endfor %}
+
+{% for host in data.control_plane %}
+Host private-control-plane{{ loop.index }}
+HostName {{ host.status.internal_ip }}
+User ubuntu
+Port 22
+IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentitiesOnly yes
+ProxyJump bastion-host
+{% endfor %}
+
+{% for host in data.workers %}
+Host private-worker-node{{loop.index}}
+HostName {{ host.status.internal_ip }}
+User ubuntu
+Port 22
+IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentitiesOnly yes
+ProxyJump bastion-host
+{% endfor %}

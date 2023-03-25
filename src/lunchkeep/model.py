@@ -25,6 +25,12 @@ class Node:
     metadata: NodeMetadata
     is_control_plane: bool = pydantic.Field(default=False)
 
+    def __repr__(self):
+        out = f"""
+        cp: {self.is_control_plane}, private_ip: {self.status.internal_ip}
+        """.strip()
+        return out
+
     def __post_init__(self):
         if "labels" not in self.metadata:
             return

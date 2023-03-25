@@ -123,7 +123,6 @@ def main(args):
     setup_logging(args.loglevel)
     _logger.debug("Starting crazy calculations...")
     lib.main()
-
     _logger.info("Script ends here")
 
 
