@@ -31,36 +31,6 @@ def main1():
         return False, result.stdout + result.stderr
 
 
-# cat <<'__eot__' >data.json
-# [
-#   {
-#     "test": "Zero to One",
-#     "title": "Zero to One",
-#     "subtitle": "Notes on Startups, or How to Build the Future",
-#     "author": "Peter Thiel",
-#     "publisher": "Ballantine Books",
-#     "isbn_10": "0753555190",
-#     "isbn_13": "978-0753555194",
-#     "price": 14.29,
-#     "author2": {
-#       "name": "Peter Thiel",
-#       "verified": true
-#     }
-#   },
-#   {
-#     "title": "The Lean Startup",
-#     "subtitle": "How Relentless Change Creates Radically Successful Businesses",
-#     "author": "Eric Ries",
-#     "publisher": "Penguin UK",
-#     "isbn_10": "0670921602",
-#     "isbn_13": "978-0670921607",
-#     "price": 12.96
-#   }
-# ]
-# __eot__
-# #+END_SRC
-
-
 class NodeMetadata(pydantic.BaseModel):
     labels: dict
 
@@ -89,11 +59,6 @@ def main() -> None:
 
     for node in nodes:
         print(node)
-
-
-#    print(books[0])
-#    print(books[0].dict(exclude={"price"}))
-#    print(books[1].copy())
 
 
 if __name__ == "__main__":
