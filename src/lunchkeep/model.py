@@ -2,6 +2,18 @@ import pydantic
 import pydantic.dataclasses
 
 
+class NodeStatus(pydantic.BaseModel):
+    addresses: list[dict]
+
+    @property
+    def internal_ip(self) -> str | None:
+        for item in self.addresses:
+            if item["type"] == "InternalIP":
+                return item["address"]
+
+        return None
+
+
 class NodeMetadata(pydantic.BaseModel):
     labels: dict
 
@@ -9,6 +21,7 @@ class NodeMetadata(pydantic.BaseModel):
 @pydantic.dataclasses.dataclass
 class Node:
     kind: str
+    status: NodeStatus
     metadata: NodeMetadata
     is_control_plane: bool = pydantic.Field(default=False)
 

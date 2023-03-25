@@ -39,7 +39,7 @@ def main() -> None:
         nodes: typing.List[model.Node] = [model.Node(**item) for item in nodes_tmp]
 
     for node in nodes:
-        print(node)
+        print(node.is_control_plane, node.status.internal_ip)
 
 
 if __name__ == "__main__":
