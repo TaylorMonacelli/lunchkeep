@@ -10,7 +10,7 @@ import jinja2
 import pkg_resources
 import platformdirs
 
-from . import model
+from . import model_node
 
 _logger = logging.getLogger(__name__)
 
@@ -77,10 +77,8 @@ def run_process(
 def run_kubectl():
     cmd = [
         "kubectl",
-        "--kubeconfig",
-        str(kubeconfig_path),
         "get",
-        "nodes",
+        "awscluster",
         "-o",
         "json",
     ]
@@ -90,7 +88,7 @@ def run_kubectl():
     return stdout
 
 
-def categorize_nodes(nodes: list[model.Node]) -> dict:
+def categorize_nodes(nodes: list[model_node.Node]) -> dict:
     bastion_nodes = []
     control_plane_nodes = []
     worker_nodes = []
@@ -139,8 +137,8 @@ def main(args) -> None:
     write_cache()
     with open(cache_path) as file:
         nodes_dict = jsonmod.load(file)
-        nodes: typing.List[model.Node] = [
-            model.Node(**node) for node in nodes_dict["items"]
+        nodes: typing.List[model_node.Node] = [
+            model_node.Node(**node) for node in nodes_dict["items"]
         ]
 
     template = env.get_template("ssh-config.j2")
