@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import pathlib
 import subprocess
@@ -64,24 +63,23 @@ def main1():
 
 class NodeMetadata(pydantic.BaseModel):
     labels: dict
-    annotations: dict
 
 
-@dataclasses.dataclass
-class Node(pydantic.BaseModel):
+@pydantic.dataclasses.dataclass
+class Node:
     kind: str
     metadata: NodeMetadata
-    is_control_plane: bool = dataclasses.field(init=False)
+    is_control_plane: bool | None = pydantic.Field(
+        default=False,
+    )
 
     def __post_init__(self):
-        labels = set(self.metadata.labels)
+        labels = set(self.metadata["labels"])
         if "node-role.kubernetes.io/control-plane" in labels:
             self.is_control_plane = True
 
 
 def main() -> None:
-    """Main function."""
-
     data_path = pathlib.Path("/Users/mtm/pdev/taylormonacelli/lunchkeep/out.json")
 
     with open(data_path) as file:
@@ -90,7 +88,7 @@ def main() -> None:
         nodes: typing.List[Node] = [Node(**item) for item in nodes_tmp]
 
     for node in nodes:
-        print(node.kind)
+        print(node)
 
 
 #    print(books[0])
