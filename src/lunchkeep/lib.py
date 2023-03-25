@@ -3,11 +3,10 @@ import pathlib
 import subprocess
 import typing
 
-import pydantic
-import pydantic.dataclasses
+from . import model
 
 
-def main1():
+def generate_json():
     cmd = [
         "kubectl",
         "--kubeconfig=./my-cluster.kubeconfig",
@@ -31,31 +30,13 @@ def main1():
         return False, result.stdout + result.stderr
 
 
-class NodeMetadata(pydantic.BaseModel):
-    labels: dict
-
-
-@pydantic.dataclasses.dataclass
-class Node:
-    kind: str
-    metadata: NodeMetadata
-    is_control_plane: bool | None = pydantic.Field(
-        default=False,
-    )
-
-    def __post_init__(self):
-        labels = set(self.metadata["labels"])
-        if "node-role.kubernetes.io/control-plane" in labels:
-            self.is_control_plane = True
-
-
 def main() -> None:
     data_path = pathlib.Path("/Users/mtm/pdev/taylormonacelli/lunchkeep/out.json")
 
     with open(data_path) as file:
         data = json.load(file)
         nodes_tmp = data["items"]
-        nodes: typing.List[Node] = [Node(**item) for item in nodes_tmp]
+        nodes: typing.List[model.Node] = [model.Node(**item) for item in nodes_tmp]
 
     for node in nodes:
         print(node)
