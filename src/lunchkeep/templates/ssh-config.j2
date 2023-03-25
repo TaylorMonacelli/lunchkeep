@@ -3,7 +3,7 @@ Host bastion-host
 HostName {{ host.public_ip }}
 User ubuntu
 Port 22
-IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentityFile {{ data.ssh_identity_path }}
 IdentitiesOnly yes
 {% endfor %}
 
@@ -12,7 +12,7 @@ Host private-control-plane{{ loop.index }}
 HostName {{ host.status.internal_ip }}
 User ubuntu
 Port 22
-IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentityFile {{ data.ssh_identity_path }}
 IdentitiesOnly yes
 ProxyJump bastion-host
 {% endfor %}
@@ -22,7 +22,7 @@ Host private-worker-node{{loop.index}}
 HostName {{ host.status.internal_ip }}
 User ubuntu
 Port 22
-IdentityFile ~/.ssh/streambox-us-east-1.pem
+IdentityFile {{ data.ssh_identity_path }}
 IdentitiesOnly yes
 ProxyJump bastion-host
 {% endfor %}

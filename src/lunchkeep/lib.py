@@ -1,6 +1,7 @@
 import datetime
 import json as jsonmod
 import logging
+import os
 import pathlib
 import subprocess
 import sys
@@ -26,10 +27,13 @@ cache_dir = pathlib.Path(_dir)
 cache_path = cache_dir / "data.json"
 cache_path.parent.mkdir(exist_ok=True, parents=True)
 ssh_config_path = pathlib.Path("~/.ssh/cluster-api-test.config").expanduser()
-kubeconfig_path = pathlib.Path(
-    "/Users/mtm/pdev/taylormonacelli/securitytax/my-cluster.kubeconfig"
-)
 kubeconfig_path = pathlib.Path.cwd() / "my-cluster.kubeconfig"
+
+keyname = "AWS_SSH_KEY_NAME"
+if not os.getenv(keyname, None):
+    msg = f"{keyname} not defined"
+    raise ValueError(msg)
+ssh_identity_path = pathlib.Path(f"~/.ssh/{os.getenv(keyname, None)}.pem").expanduser()
 
 
 def normalize_newlines(s: str) -> str:
@@ -144,7 +148,9 @@ def main(args) -> None:
         ]
 
     template = env.get_template("ssh-config.j2")
-    data = categorize_nodes(nodes)
+    node_data = categorize_nodes(nodes)
+    data = {"ssh_identity_path": str(ssh_identity_path), **node_data}
+
     out = template.render(data=data)
     ssh_config_path.write_text(out)
 
