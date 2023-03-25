@@ -1,7 +1,9 @@
 import datetime
 import json as jsonmod
+import logging
 import pathlib
 import subprocess
+import sys
 import typing
 
 import jinja2
@@ -9,6 +11,8 @@ import pkg_resources
 import platformdirs
 
 from . import model
+
+_logger = logging.getLogger(__name__)
 
 package = __name__.split(".")[0]
 templates_dir = pathlib.Path(pkg_resources.resource_filename(package, "templates"))
@@ -21,30 +25,69 @@ _dir = platformdirs.user_cache_dir(appname, appauthor)
 cache_dir = pathlib.Path(_dir)
 cache_path = cache_dir / "data.json"
 cache_path.parent.mkdir(exist_ok=True, parents=True)
+ssh_config_path = pathlib.Path("~/.ssh/cluster-api-test.config").expanduser()
+kubeconfig_path = pathlib.Path(
+    "/Users/mtm/pdev/taylormonacelli/securitytax/my-cluster.kubeconfig"
+)
+kubeconfig_path = pathlib.Path.cwd() / "my-cluster.kubeconfig"
+
+
+def normalize_newlines(s: str) -> str:
+    """
+    Normalizes new lines such they are comparable across different operating systems
+    :param s:
+    :return:
+    """
+    return s.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def run_process(
+    cmd: typing.Any,
+    env: typing.Any = None,
+    print_error: bool = True,
+    raise_exception: bool = True,
+    timeout: typing.Optional[float] = None,
+) -> typing.Tuple[str, str]:
+    try:
+        process = subprocess.Popen(
+            args=cmd,
+            shell=False,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        bstdout, bstderr = process.communicate(timeout=timeout)
+        stdout = normalize_newlines(bstdout.decode().rstrip())
+        stderr = normalize_newlines(bstderr.decode().rstrip())
+        if process.returncode != 0:
+            if print_error:
+                sys.stderr.write(f"Subprocess error:\n{stderr}\n")
+            if raise_exception:
+                raise subprocess.CalledProcessError(
+                    returncode=process.returncode, cmd=cmd
+                )
+        return stdout, stderr
+    except Exception as e:
+        if print_error:
+            cmd = " ".join(cmd)
+            sys.stderr.write(f"=== Error executing:\n{cmd}\n===================")
+        raise e
 
 
 def run_kubectl():
     cmd = [
         "kubectl",
-        "--kubeconfig=./my-cluster.kubeconfig",
+        "--kubeconfig",
+        str(kubeconfig_path),
         "get",
         "nodes",
         "-o",
         "json",
     ]
-    cmd_str = " ".join(cmd)
+    stdout, stderr = run_process(cmd)
+    _logger.debug(stdout)
 
-    result = subprocess.run(
-        cmd_str,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    if result.returncode == 0:
-        return True, result.stdout
-    else:
-        return False, result.stdout + result.stderr
+    return stdout
 
 
 def categorize_nodes(nodes: list[model.Node]) -> dict:
@@ -68,13 +111,8 @@ def categorize_nodes(nodes: list[model.Node]) -> dict:
 
 
 def regenerate_cache():
-    rc, json = run_kubectl()
-    if not rc:
-        msg = f"failed to run kubectl, {json}"
-        raise ValueError(msg)
-
-    out = jsonmod.dumps(json)
-    cache_path.write_text(out)
+    json = run_kubectl()
+    cache_path.write_text(json)
 
 
 def write_cache() -> dict:
@@ -87,10 +125,17 @@ def write_cache() -> dict:
     cache_is_old = now - timestamp > datetime.timedelta(hours=3)
 
     if cache_is_old:
+        msg = f"{cache_path} is old, regenerating"
+        _logger.debug(msg)
         regenerate_cache()
 
 
-def main() -> None:
+def main(args) -> None:
+    if args.show_config:
+        msg = f"{cache_path}"
+        # _logger.info(message)
+        print(msg)
+
     write_cache()
     with open(cache_path) as file:
         nodes_dict = jsonmod.load(file)
@@ -101,7 +146,7 @@ def main() -> None:
     template = env.get_template("ssh-config.j2")
     data = categorize_nodes(nodes)
     out = template.render(data=data)
-    print(out)
+    ssh_config_path.write_text(out)
 
 
 if __name__ == "__main__":

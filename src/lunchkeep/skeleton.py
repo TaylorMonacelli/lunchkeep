@@ -94,6 +94,14 @@ def parse_args(args):
         action="store_const",
         const=logging.DEBUG,
     )
+    parser.add_argument(
+        "--show-config",
+        help="show where cache file and possibly "
+        "other files related to this app are kept",
+        action="store_true",
+        default=False,
+        required=False,
+    )
     return parser.parse_args(args)
 
 
@@ -122,7 +130,7 @@ def main(args):
     args = parse_args(args)
     setup_logging(args.loglevel)
     _logger.debug("Starting crazy calculations...")
-    lib.main()
+    lib.main(args)
     _logger.info("Script ends here")
 
 
