@@ -24,7 +24,7 @@ import argparse
 import logging
 import sys
 
-from lunchkeep import __version__
+from lunchkeep import __version__, lib
 
 __author__ = "Taylor Monacelli"
 __copyright__ = "Taylor Monacelli"
@@ -72,13 +72,12 @@ def parse_args(args):
     Returns:
       :obj:`argparse.Namespace`: command line parameters namespace
     """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
+    parser = argparse.ArgumentParser(description="")
     parser.add_argument(
         "--version",
         action="version",
         version="lunchkeep {ver}".format(ver=__version__),
     )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
     parser.add_argument(
         "-v",
         "--verbose",
@@ -123,7 +122,8 @@ def main(args):
     args = parse_args(args)
     setup_logging(args.loglevel)
     _logger.debug("Starting crazy calculations...")
-    print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
+    lib.main()
+
     _logger.info("Script ends here")
 
 
