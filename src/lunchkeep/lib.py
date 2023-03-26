@@ -27,7 +27,12 @@ cache_dir = pathlib.Path(_dir)
 cache_path = cache_dir / "data.json"
 cache_path.parent.mkdir(exist_ok=True, parents=True)
 ssh_config_path = pathlib.Path("~/.ssh/cluster-api-test.config").expanduser()
-kubeconfig_path = pathlib.Path.cwd() / "my-cluster.kubeconfig"
+
+keyname = "CLUSTER_NAME"
+if not os.getenv(keyname, None):
+    msg = f"{keyname} not defined"
+    raise ValueError(msg)
+kubeconfig_path = pathlib.Path.cwd() / f"{os.getenv(keyname, None)}.kubeconfig"
 
 keyname = "AWS_SSH_KEY_NAME"
 if not os.getenv(keyname, None):
